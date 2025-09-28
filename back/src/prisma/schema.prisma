@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/client"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Utilisateur {
+  id        String    @id @default(uuid())
+  email     String    @unique
+  prenom    String
+  nom       String
+  password  String
+  role      Role      @default(USER)
+  equipes   Equipe[] // Equipes auxquelles l'utilisateur appartient
+  tournois  Tournoi[] // Tournois auxquels l'utilisateur est inscrit
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Equipe {
+  id        String        @id @default(uuid())
+  nom       String
+  joueurs   Utilisateur[] // Joueurs dans l'équipe (2 joueurs par équipe)
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
+  matchsA   Match[]       @relation("equipeA") // Matchs où l'équipe est equipeA
+  matchsB   Match[]       @relation("equipeB") // Matchs où l'équipe est equipeB
+  tournoi   Tournoi       @relation(fields: [tournoiId], references: [id])
+  tournoiId String
+}
+
+model Tournoi {
+  id              String        @id @default(uuid())
+  nom             String
+  date            DateTime
+  description     String?
+  joueursInscrits Utilisateur[] // Joueurs inscrits au tournoi
+  equipes         Equipe[] // Equipes créees pour le tournoi
+  matchs          Match[] // Matchs du tournoi
+  estTermine      Boolean       @default(false) @map("est_termine")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+}
+
+model Match {
+  id         String   @id @default(uuid())
+  equipeA    Equipe   @relation("equipeA", fields: [equipeAId], references: [id])
+  equipeAId  String
+  equipeB    Equipe   @relation("equipeB", fields: [equipeBId], references: [id])
+  equipeBId  String
+  scoreA     Int
+  scoreB     Int
+  tournoi    Tournoi  @relation(fields: [tournoiId], references: [id]) // Tournoi auquel le match appartient
+  tournoiId  String
+  estTermine Boolean  @default(false) @map("est_termine")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+}
+
+enum Role {
+  USER
+  ADMIN
+}

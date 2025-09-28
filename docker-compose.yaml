@@ -1,12 +1,29 @@
-version: "3.8"
 services:
   api:
     build:
       context: ./back
       dockerfile: Dockerfile
+    container_name: ${PROJECT_NAME}-api
     ports:
       - "3001:3001"
+      - "5555:5555"
     volumes:
       - ./back:/app
+    depends_on:
+      - database
     environment:
       - NODE_ENV=development
+  database:
+    image: mysql:latest
+    container_name: ${PROJECT_NAME}-mysql
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_ROOT_USER=${MYSQL_ROOT_USER}
+      - MYSQL_DATABASE=${PROJECT_NAME}
+volumes:
+  db_data:
+    name: ${PROJECT_NAME}-mysql-data
