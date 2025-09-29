@@ -13,6 +13,19 @@ services:
       - database
     environment:
       - NODE_ENV=development
+  web:
+    build:
+      context: ./front
+      dockerfile: Dockerfile
+    container_name: ${PROJECT_NAME}-web
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./front:/app
+    depends_on:
+      - api
+    environment:
+      - NODE_ENV=development
   database:
     image: mysql:latest
     container_name: ${PROJECT_NAME}-mysql
