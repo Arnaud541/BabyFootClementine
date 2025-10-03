@@ -5,6 +5,10 @@
   "main": "dist/app.js",
   "scripts": {
     "test": "jest",
+    "test:setup": "dotenv -e .env.test -- npx prisma migrate deploy",
+    "studio:test": "dotenv -e .env.test -- npx prisma studio",
+    "dev:setup": "dotenv -e .env -- npx prisma migrate deploy",
+    "studio:dev": "dotenv -e .env -- npx prisma studio",
     "dev": "nodemon",
     "build": "npx tsc && node dist/app.js"
   },
@@ -22,6 +26,7 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^24.5.2",
     "@types/supertest": "^6.0.3",
+    "dotenv-cli": "^10.0.0",
     "jest": "^30.2.0",
     "prisma": "^6.16.2",
     "supertest": "^7.1.4",
