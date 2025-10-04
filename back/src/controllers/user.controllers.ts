@@ -6,6 +6,7 @@ import { Request, Response } from "express";
 import UserService from "../services/user.services";
 import { userIdSchema } from "../lib/schemas/userSchema";
 import { z } from "zod";
+import { Prisma } from "../prisma/generated/client";
 
 export class UserController {
   private userService: UserService;
@@ -31,9 +32,10 @@ export class UserController {
       if (error instanceof z.ZodError) {
         res.status(400).json({ error: { message: error.issues[0]?.message } });
         return;
-      } else {
-        res.status(500).json({ error: { message: error.message } });
       }
+
+      res.status(500).json({ error: { message: error.message } });
+      return;
     }
   };
 }
