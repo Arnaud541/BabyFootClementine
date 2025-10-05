@@ -1,7 +1,6 @@
 import request from "supertest";
 import app from "../src/app";
 import { prisma } from "../src/prisma/client";
-import { uuid } from "zod";
 
 beforeAll(async () => {
   // Création d'utilisateurs de test

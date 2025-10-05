@@ -6,7 +6,6 @@ import { Request, Response } from "express";
 import UserService from "../services/user.services";
 import { userIdSchema } from "../lib/schemas/userSchema";
 import { z } from "zod";
-import { Prisma } from "../prisma/generated/client";
 
 export class UserController {
   private userService: UserService;
