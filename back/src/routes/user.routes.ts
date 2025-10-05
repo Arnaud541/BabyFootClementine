@@ -6,6 +6,6 @@ import UserController from "../controllers/user.controllers";
 const userRouter = Router();
 const userController = new UserController();
 
-userRouter.get("/", userController.getAllUsers);
+userRouter.get("/:id/tournois", userController.getTournoisByUserId);
 
 export default userRouter;

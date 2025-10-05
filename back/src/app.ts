@@ -2,6 +2,7 @@ import express, { Request, Response } from "express";
 import dotenv from "dotenv";
 import userRouter from "./routes/user.routes";
 import { authMiddleware } from "./middlewares/auth.middlewares";
+import tournoiRouter from "./routes/tournoi.routes";
 
 dotenv.config();
 
@@ -9,6 +10,7 @@ const app = express();
 const port = process.env.PORT || 3001;
 
 app.use("/api/users", userRouter);
+app.use("/api/tournois", tournoiRouter);
 
 app.get("/", authMiddleware, (req: Request, res: Response) => {
   res.send("Hello World!");
@@ -17,3 +19,5 @@ app.get("/", authMiddleware, (req: Request, res: Response) => {
 app.listen(port || 3001, () => {
   console.log(`Server is running on port ${port}`);
 });
+
+export default app;

@@ -8,13 +8,9 @@
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
     "module": "commonjs",
-    "target": "es2016",
+    "target": "es2017",
     "esModuleInterop": true,
-    "types": [],
-    // For nodejs:
-    // "lib": ["esnext"],
-    // "types": ["node"],
-    // and npm install -D @types/node
+    "types": ["node", "jest"],
 
     // Other Outputs
     "sourceMap": true,
@@ -33,5 +29,11 @@
     "isolatedModules": true,
     "moduleDetection": "force",
     "skipLibCheck": true
-  }
+  },
+  "include": [
+    "src/**/*.ts",
+    "tests/**/*.ts",
+    "jest.setup.ts",
+    "prisma.config.ts"
+  ]
 }

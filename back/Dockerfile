@@ -12,9 +12,9 @@ RUN npm install
 COPY . .
 
 # Générer le client Prisma avec le chemin correct
-RUN npx prisma generate --schema=./src/prisma/schema.prisma
+RUN npx prisma generate
 
 EXPOSE 3001
 
 # Utiliser le chemin correct pour schema.prisma dans la commande de démarrage
-CMD ["sh", "-c", "npx prisma migrate deploy --schema=./src/prisma/schema.prisma && npm run dev"]
+CMD ["sh", "-c", "npm run dev:setup && npm run test:setup && npm run dev"]

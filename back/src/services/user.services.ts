@@ -3,15 +3,33 @@
 // Exemple avec Prisma ORM
 
 import { prisma } from "../prisma/client";
-import { Utilisateur } from "../prisma/generated/client";
+import { Prisma, Tournoi } from "../prisma/generated/client";
 
 export class UserService {
-  public async getAllUsers(): Promise<Utilisateur[]> {
+  public async getTournoisByUserId(userId: string): Promise<Tournoi[]> {
     try {
-      const utilisateurs = await prisma.utilisateur.findMany();
-      return utilisateurs;
+      await prisma.utilisateur.findUniqueOrThrow({
+        where: { id: userId },
+      });
+
+      const tournois = await prisma.tournoi.findMany({
+        where: { joueursInscrits: { some: { id: userId } } },
+      });
+      return tournois;
     } catch (error) {
-      throw new Error("Erreur de récupération des utilisateurs");
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        throw new Prisma.PrismaClientKnownRequestError(
+          "Cet utilisateur n'existe pas",
+          {
+            code: "P2025",
+            clientVersion: "6.16.2",
+          }
+        );
+      }
+
+      throw new Error(
+        "Erreur de récupération des tournois auxquels l'utilisateur est inscrit"
+      );
     }
   }
 }

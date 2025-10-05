@@ -11,6 +11,7 @@ services:
       - ./back:/app
     depends_on:
       - database
+      - database-test
     environment:
       - NODE_ENV=development
   web:
@@ -37,6 +38,19 @@ services:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - MYSQL_ROOT_USER=${MYSQL_ROOT_USER}
       - MYSQL_DATABASE=${PROJECT_NAME}
+  database-test:
+    image: mysql:latest
+    container_name: ${PROJECT_NAME}-mysql-test
+    volumes:
+      - db_data_test:/var/lib/mysql
+    ports:
+      - "3307:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_ROOT_USER=root
+      - MYSQL_DATABASE=BabyFootClementine-test
 volumes:
   db_data:
     name: ${PROJECT_NAME}-mysql-data
+  db_data_test:
+    name: ${PROJECT_NAME}-mysql-test-data
