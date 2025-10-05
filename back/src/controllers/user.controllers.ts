@@ -1,6 +1,4 @@
-// Construction des contrôleurs utilisateur (gestion des requêtes et réponses)
-
-// Exemple d'utilisation d'un controller avec service
+// Construction du contrôleur utilisateur (gestion des requêtes et réponses)
 
 import { Request, Response } from "express";
 import UserService from "../services/user.services";
