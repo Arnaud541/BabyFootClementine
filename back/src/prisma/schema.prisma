@@ -52,8 +52,8 @@ model Match {
   equipeAId  String
   equipeB    Equipe   @relation("equipeB", fields: [equipeBId], references: [id])
   equipeBId  String
-  scoreA     Int
-  scoreB     Int
+  scoreA     Int      @default(0)
+  scoreB     Int      @default(0)
   tournoi    Tournoi  @relation(fields: [tournoiId], references: [id]) // Tournoi auquel le match appartient
   tournoiId  String
   estTermine Boolean  @default(false) @map("est_termine")
