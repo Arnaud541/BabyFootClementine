@@ -43,7 +43,6 @@ describe("GET /api/tournois/:id", () => {
     const response = await request(app).get(
       "/api/tournois/49a6a489-f067-4d6a-968c-27f3bdda767f"
     );
-    console.log(response.body);
     expect(response.status).toBe(200);
     expect(response.body).toEqual({
       id: "49a6a489-f067-4d6a-968c-27f3bdda767f",
