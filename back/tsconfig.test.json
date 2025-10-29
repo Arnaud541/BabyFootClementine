@@ -2,7 +2,13 @@
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "types": ["node", "jest"],
-    "rootDir": "."
+    "rootDir": ".",
+    "noEmit": true
   },
-  "include": ["./tests/**/*.ts", "./jest.setup.ts", "./jest.config.ts"]
+  "include": [
+    "./tests/**/*.ts",
+    "jest.setup.ts",
+    "jest.config.ts",
+    "prisma.config.ts"
+  ]
 }

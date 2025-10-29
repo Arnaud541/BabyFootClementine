@@ -3,7 +3,7 @@
 // Exemple avec Prisma ORM
 
 import { prisma } from "../prisma/client";
-import { Prisma, Tournoi } from "../prisma/generated/client";
+import { Prisma, Tournoi } from "@prisma/client";
 
 export class UserService {
   public async getTournoisByUserId(userId: string): Promise<Tournoi[]> {

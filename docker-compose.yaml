@@ -9,6 +9,7 @@ services:
       - "5555:5555"
     volumes:
       - ./back:/app
+    user: "${UID}:${GID}"
     depends_on:
       database:
         condition: service_healthy
@@ -25,6 +26,7 @@ services:
       - "3000:3000"
     volumes:
       - ./front:/app
+    user: "${UID}:${GID}"
     depends_on:
       - api
     environment:

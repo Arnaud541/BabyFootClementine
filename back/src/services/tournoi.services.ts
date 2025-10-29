@@ -4,7 +4,7 @@ import {
   TournoiUpdateParams,
 } from "../lib/definitions";
 import { prisma } from "../prisma/client";
-import { Prisma, Tournoi } from "../prisma/generated/client";
+import { Prisma } from "@prisma/client";
 
 export class TournoiService {
   public async getAllTournois(): Promise<TournoiSummary[]> {
