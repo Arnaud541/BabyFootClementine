@@ -2,15 +2,15 @@
   "name": "back",
   "version": "1.0.0",
   "description": "API pour gestion de tournois de baby-foot",
-  "main": "dist/app.js",
+  "main": "dist/server.js",
   "scripts": {
-    "test": "jest",
-    "test:setup": "dotenv -e .env.test -- npx prisma migrate deploy",
+    "test": "dotenv -e .env.test -- npm run test:reset && jest --runInBand",
+    "test:reset": "dotenv -e .env.test -- npx prisma migrate reset --force --skip-seed",
     "studio:test": "dotenv -e .env.test -- npx prisma studio",
     "dev:setup": "dotenv -e .env -- npx prisma migrate deploy",
     "studio:dev": "dotenv -e .env -- npx prisma studio",
-    "dev": "nodemon",
-    "build": "npx tsc && node dist/app.js"
+    "dev": "dotenv -e .env -- nodemon",
+    "build": "npx tsc -p tsconfig.json && node dist/server.js"
   },
   "author": "",
   "license": "ISC",
