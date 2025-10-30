@@ -86,4 +86,30 @@ export class TournoiController {
       res.status(500).json({ error: { message: error.message } });
     }
   };
+
+  /**
+   * Supprime un tournoi par son ID.
+   * @param req - La requête HTTP.
+   * @param res - La réponse HTTP.
+   */
+  public deleteTournoiById = async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
+    try {
+      const tournoiId = tournoiIdSchema.parse(req.params.id);
+      await this.tournoiService.deleteTournoiById(tournoiId);
+      res.status(204).end();
+    } catch (error: any) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        res.status(404).json({ error: { message: error.message } });
+        return;
+      }
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: { message: error.issues[0]?.message } });
+        return;
+      }
+      res.status(500).json({ error: { message: error.message } });
+    }
+  };
 }

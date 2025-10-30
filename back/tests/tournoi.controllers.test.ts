@@ -2,7 +2,7 @@ import request from "supertest";
 import { app } from "../src/app";
 import { prisma } from "../src/prisma/client";
 
-beforeAll(async () => {
+beforeEach(async () => {
   // Création de tournois de test
   await prisma.tournoi.createMany({
     data: [
@@ -20,7 +20,7 @@ beforeAll(async () => {
   });
 });
 
-afterAll(async () => {
+afterEach(async () => {
   await prisma.tournoi.deleteMany();
 });
 
@@ -129,6 +129,42 @@ describe("PUT /api/tournois/:id", () => {
       .send({ nom: "Tournoi Test" });
     expect(() => {
       throw new Error("Erreur de mise à jour du tournoi");
+    }).toThrow();
+  });
+});
+
+describe("DELETE /api/tournois/:id", () => {
+  it("should delete a tournoi by id", async () => {
+    const response = await request(app).delete(
+      "/api/tournois/39a6a489-f067-4d6a-968c-27f3bdda767f"
+    );
+    expect(response.status).toBe(204);
+  });
+
+  it("should return 404 if tournoi to delete not found", async () => {
+    const response = await request(app).delete(
+      "/api/tournois/2d0291c9-940b-4b1e-b81a-37123b050e82"
+    );
+    expect(response.status).toBe(404);
+    expect(response.body).toMatchObject({
+      error: { message: "Ce tournoi n'existe pas" },
+    });
+  });
+
+  it("should return 400 for invalid UUID", async () => {
+    const response = await request(app).delete("/api/tournois/12");
+    expect(response.status).toBe(400);
+    expect(response.body).toMatchObject({
+      error: { message: "Identifiant du tournoi invalide" },
+    });
+  });
+
+  it("should throw an error", async () => {
+    const response = await request(app).delete(
+      "/api/tournois/3fa85f64-5717-4562-b3fc-2c963f66afa6"
+    );
+    expect(() => {
+      throw new Error("Erreur de suppression du tournoi");
     }).toThrow();
   });
 });

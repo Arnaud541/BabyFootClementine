@@ -1,3 +1,5 @@
+import { config } from "dotenv";
+config({ path: ".env.test" });
 import { prisma } from "../src/prisma/client";
 
 beforeAll(async () => {
