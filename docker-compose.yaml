@@ -9,9 +9,12 @@ services:
       - "5555:5555"
     volumes:
       - ./back:/app
+    user: "${UID}:${GID}"
     depends_on:
-      - database
-      - database-test
+      database:
+        condition: service_healthy
+      database-test:
+        condition: service_healthy
     environment:
       - NODE_ENV=development
   web:
@@ -23,10 +26,12 @@ services:
       - "3000:3000"
     volumes:
       - ./front:/app
+    user: "${UID}:${GID}"
     depends_on:
       - api
     environment:
       - NODE_ENV=development
+
   database:
     image: mysql:latest
     container_name: ${PROJECT_NAME}-mysql
@@ -38,6 +43,16 @@ services:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - MYSQL_ROOT_USER=${MYSQL_ROOT_USER}
       - MYSQL_DATABASE=${PROJECT_NAME}
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mysqladmin ping -h 127.0.0.1 -p$$MYSQL_ROOT_PASSWORD --silent",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
   database-test:
     image: mysql:latest
     container_name: ${PROJECT_NAME}-mysql-test
@@ -49,6 +64,16 @@ services:
       - MYSQL_ROOT_PASSWORD=root
       - MYSQL_ROOT_USER=root
       - MYSQL_DATABASE=BabyFootClementine-test
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mysqladmin ping -h 127.0.0.1 -p$$MYSQL_ROOT_PASSWORD --silent",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
 volumes:
   db_data:
     name: ${PROJECT_NAME}-mysql-data

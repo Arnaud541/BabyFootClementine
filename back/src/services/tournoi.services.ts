@@ -1,6 +1,10 @@
-import { TournoiDetails, TournoiSummary } from "../lib/definitions";
+import {
+  TournoiDetails,
+  TournoiSummary,
+  TournoiUpdateParams,
+} from "../lib/definitions";
 import { prisma } from "../prisma/client";
-import { Prisma, Tournoi } from "../prisma/generated/client";
+import { Prisma } from "@prisma/client";
 
 export class TournoiService {
   public async getAllTournois(): Promise<TournoiSummary[]> {
@@ -79,6 +83,58 @@ export class TournoiService {
       }
 
       throw new Error("Erreur de récupération du tournoi");
+    }
+  }
+
+  public async updateTournoiById(
+    tournoiId: string,
+    updateData: TournoiUpdateParams
+  ): Promise<TournoiSummary> {
+    try {
+      const { nom, date, description, estTermine } = updateData;
+      const updatedTournoi = await prisma.tournoi.update({
+        select: {
+          id: true,
+          nom: true,
+          date: true,
+          description: true,
+          estTermine: true,
+          _count: {
+            select: { equipes: true, matchs: true, joueursInscrits: true },
+          },
+        },
+        where: { id: tournoiId },
+        data: {
+          nom: nom ?? Prisma.skip,
+          date: date ?? Prisma.skip,
+          description: description ?? Prisma.skip,
+          estTermine: estTermine ?? Prisma.skip,
+        },
+      });
+
+      return {
+        id: updatedTournoi.id,
+        nom: updatedTournoi.nom,
+        date: updatedTournoi.date,
+        description: updatedTournoi.description,
+        estTermine: updatedTournoi.estTermine,
+        nbEquipes: updatedTournoi._count.equipes,
+        nbMatchs: updatedTournoi._count.matchs,
+        nbJoueursInscrits: updatedTournoi._count.joueursInscrits,
+      };
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === "P2025") {
+          throw new Prisma.PrismaClientKnownRequestError(
+            "Ce tournoi n'existe pas",
+            {
+              code: "P2025",
+              clientVersion: "6.16.2",
+            }
+          );
+        }
+      }
+      throw new Error("Erreur de mise à jour du tournoi");
     }
   }
 }

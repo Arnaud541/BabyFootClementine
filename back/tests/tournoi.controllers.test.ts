@@ -1,5 +1,5 @@
 import request from "supertest";
-import app from "../src/app";
+import { app } from "../src/app";
 import { prisma } from "../src/prisma/client";
 
 beforeAll(async () => {
@@ -69,7 +69,7 @@ describe("GET /api/tournois/:id", () => {
     const response = await request(app).get("/api/tournois/12");
     expect(response.status).toBe(400);
     expect(response.body).toMatchObject({
-      error: { message: "Identifiant tournoi invalide" },
+      error: { message: "Identifiant du tournoi invalide" },
     });
   });
 
@@ -79,6 +79,56 @@ describe("GET /api/tournois/:id", () => {
     );
     expect(() => {
       throw new Error("Erreur de récupération du tournoi");
+    }).toThrow();
+  });
+});
+
+describe("PUT /api/tournois/:id", () => {
+  it("should update a tournoi by id", async () => {
+    const response = await request(app)
+      .put("/api/tournois/39a6a489-f067-4d6a-968c-27f3bdda767f")
+      .send({ nom: "Tournoi Modifié", description: "Description modifiée" });
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
+      id: "39a6a489-f067-4d6a-968c-27f3bdda767f",
+      nom: "Tournoi Modifié",
+      date: expect.any(String),
+      description: "Description modifiée",
+      estTermine: false,
+      nbEquipes: 0,
+      nbMatchs: 0,
+      nbJoueursInscrits: 0,
+    });
+  });
+
+  it("should return 404 if tournoi to update not found", async () => {
+    const response = await request(app)
+      .put("/api/tournois/2d0291c9-940b-4b1e-b81a-37123b050e82")
+      .send({ nom: "Tournoi Inexistant" });
+    expect(response.status).toBe(404);
+    expect(response.body).toMatchObject({
+      error: { message: "Ce tournoi n'existe pas" },
+    });
+  });
+
+  it("should return 400 for invalid name", async () => {
+    const response = await request(app)
+      .put("/api/tournois/39a6a489-f067-4d6a-968c-27f3bdda767f")
+      .send({ nom: 12345 });
+    expect(response.status).toBe(400);
+    expect(response.body).toMatchObject({
+      error: {
+        message: "Le nom du tournoi doit être une chaîne de caractères",
+      },
+    });
+  });
+
+  it("should throw an error", async () => {
+    const response = await request(app)
+      .put("/api/tournois/39a6a489-f067-4d6a-968c-27f3bdda767f")
+      .send({ nom: "Tournoi Test" });
+    expect(() => {
+      throw new Error("Erreur de mise à jour du tournoi");
     }).toThrow();
   });
 });

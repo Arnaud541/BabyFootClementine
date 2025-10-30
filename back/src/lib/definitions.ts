@@ -1,3 +1,6 @@
+import z from "zod";
+import { tournoiUpdateSchema } from "./schemas/tournoiSchema";
+
 export type TournoiSummary = {
   id: string;
   nom: string;
@@ -38,3 +41,5 @@ export type MatchSummary = {
   scoreA: number;
   scoreB: number;
 };
+
+export type TournoiUpdateParams = z.infer<typeof tournoiUpdateSchema>;
