@@ -137,4 +137,25 @@ export class TournoiService {
       throw new Error("Erreur de mise à jour du tournoi");
     }
   }
+
+  public async deleteTournoiById(tournoiId: string): Promise<void> {
+    try {
+      await prisma.tournoi.delete({
+        where: { id: tournoiId },
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === "P2025") {
+          throw new Prisma.PrismaClientKnownRequestError(
+            "Ce tournoi n'existe pas",
+            {
+              code: "P2025",
+              clientVersion: "6.16.2",
+            }
+          );
+        }
+      }
+      throw new Error("Erreur de suppression du tournoi");
+    }
+  }
 }
