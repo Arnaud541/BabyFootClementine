@@ -32,6 +32,26 @@ export class UserService {
       );
     }
   }
+
+  public async subscribeUserToTournoi(
+    userId: string,
+    tournoiId: string
+  ): Promise<void> {
+    try {
+      await prisma.tournoi.update({
+        where: { id: tournoiId },
+        data: {
+          joueursInscrits: {
+            connect: { id: userId },
+          },
+        },
+      });
+    } catch (error) {
+      throw new Error(
+        "Erreur lors de l'inscription de l'utilisateur au tournoi"
+      );
+    }
+  }
 }
 
 export default UserService;

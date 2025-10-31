@@ -83,10 +83,10 @@ describe("GET /api/tournois/:id", () => {
   });
 });
 
-describe("PUT /api/tournois/:id", () => {
+describe("PATCH /api/tournois/:id", () => {
   it("should update a tournoi by id", async () => {
     const response = await request(app)
-      .put("/api/tournois/39a6a489-f067-4d6a-968c-27f3bdda767f")
+      .patch("/api/tournois/39a6a489-f067-4d6a-968c-27f3bdda767f")
       .send({ nom: "Tournoi Modifié", description: "Description modifiée" });
     expect(response.status).toBe(200);
     expect(response.body).toMatchObject({
@@ -103,7 +103,7 @@ describe("PUT /api/tournois/:id", () => {
 
   it("should return 404 if tournoi to update not found", async () => {
     const response = await request(app)
-      .put("/api/tournois/2d0291c9-940b-4b1e-b81a-37123b050e82")
+      .patch("/api/tournois/2d0291c9-940b-4b1e-b81a-37123b050e82")
       .send({ nom: "Tournoi Inexistant" });
     expect(response.status).toBe(404);
     expect(response.body).toMatchObject({
@@ -113,7 +113,7 @@ describe("PUT /api/tournois/:id", () => {
 
   it("should return 400 for invalid name", async () => {
     const response = await request(app)
-      .put("/api/tournois/39a6a489-f067-4d6a-968c-27f3bdda767f")
+      .patch("/api/tournois/39a6a489-f067-4d6a-968c-27f3bdda767f")
       .send({ nom: 12345 });
     expect(response.status).toBe(400);
     expect(response.body).toMatchObject({
@@ -125,7 +125,7 @@ describe("PUT /api/tournois/:id", () => {
 
   it("should throw an error", async () => {
     const response = await request(app)
-      .put("/api/tournois/39a6a489-f067-4d6a-968c-27f3bdda767f")
+      .patch("/api/tournois/39a6a489-f067-4d6a-968c-27f3bdda767f")
       .send({ nom: "Tournoi Test" });
     expect(() => {
       throw new Error("Erreur de mise à jour du tournoi");
