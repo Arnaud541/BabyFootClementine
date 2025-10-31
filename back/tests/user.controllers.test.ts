@@ -2,7 +2,7 @@ import request from "supertest";
 import { app } from "../src/app";
 import { prisma } from "../src/prisma/client";
 
-beforeAll(async () => {
+beforeEach(async () => {
   // Création d'utilisateurs de test
   await prisma.utilisateur.createMany({
     data: [
@@ -50,9 +50,57 @@ beforeAll(async () => {
   });
 });
 
-afterAll(async () => {
+afterEach(async () => {
   await prisma.tournoi.deleteMany();
   await prisma.utilisateur.deleteMany();
+});
+
+describe("PATCH /users/:userId/inscription/tournois/:tournoiId", () => {
+  it("should subscribe a user to a tournoi", async () => {
+    const response = await request(app).patch(
+      "/api/users/29a6a489-f067-4d6a-968c-27f3bdda767f/inscription/tournois/49a6a489-f067-4d6a-968c-27f3bdda767f"
+    );
+    expect(response.status).toBe(200);
+    expect(response.headers["content-type"]).toMatch(/json/);
+    expect(response.body).toEqual({
+      message: "Inscription au tournoi réussie",
+    });
+  });
+
+  it("should throw a validation error if user ID is invalid", async () => {
+    const response = await request(app).patch(
+      "/api/users/1/inscription/tournois/49a6a489-f067-4d6a-968c-27f3bdda767f"
+    );
+    expect(response.status).toBe(400);
+    expect(response.headers["content-type"]).toMatch(/json/);
+    expect(response.body).toMatchObject({
+      error: { message: "Identifiant utilisateur invalide" },
+    });
+  });
+
+  it("should throw a validation error if tournoi ID is invalid", async () => {
+    const response = await request(app).patch(
+      "/api/users/29a6a489-f067-4d6a-968c-27f3bdda767f/inscription/tournois/1"
+    );
+    expect(response.status).toBe(400);
+    expect(response.headers["content-type"]).toMatch(/json/);
+    expect(response.body).toMatchObject({
+      error: { message: "Identifiant du tournoi invalide" },
+    });
+  });
+
+  it("should return an error if server fails to subscribe user", async () => {
+    const response = await request(app).patch(
+      `/api/users/e2135b87-bf5c-4adf-adae-e406f6188cb3/inscription/tournois/39a6a489-f067-4d6a-968c-27f3bdda767f`
+    );
+    expect(response.status).toBe(500);
+    expect(response.headers["content-type"]).toMatch(/json/);
+    expect(response.body).toMatchObject({
+      error: {
+        message: "Erreur lors de l'inscription de l'utilisateur au tournoi",
+      },
+    });
+  });
 });
 
 describe("GET /users/:id/tournois", () => {
