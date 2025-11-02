@@ -1,4 +1,5 @@
 import {
+  EquipeForm,
   TournoiDetails,
   TournoiSummary,
   TournoiUpdateParams,
@@ -7,6 +8,10 @@ import { prisma } from "../prisma/client";
 import { Prisma } from "@prisma/client";
 
 export class TournoiService {
+  /**
+   * Récupère la liste de tous les tournois.
+   * @returns - La liste des tournois.
+   */
   public async getAllTournois(): Promise<TournoiSummary[]> {
     try {
       const tournois = await prisma.tournoi.findMany({
@@ -36,6 +41,11 @@ export class TournoiService {
     }
   }
 
+  /**
+   * Récupère un tournoi par son ID.
+   * @param tournoiId - L'ID du tournoi à récupérer.
+   * @returns - Les détails du tournoi.
+   */
   public async getTournoiById(tournoiId: string): Promise<TournoiDetails> {
     try {
       const tournoi = await prisma.tournoi.findUniqueOrThrow({
@@ -47,6 +57,13 @@ export class TournoiService {
           description: true,
           estTermine: true,
           joueursInscrits: { select: { id: true, prenom: true, nom: true } },
+          equipes: {
+            select: {
+              id: true,
+              nom: true,
+              joueurs: { select: { id: true, prenom: true, nom: true } },
+            },
+          },
           matchs: {
             select: {
               id: true,
@@ -86,6 +103,12 @@ export class TournoiService {
     }
   }
 
+  /**
+   * Met à jour un tournoi par son ID.
+   * @param tournoiId - L'ID du tournoi à mettre à jour.
+   * @param updateData - Les données de mise à jour du tournoi.
+   * @returns - Le tournoi mis à jour.
+   */
   public async updateTournoiById(
     tournoiId: string,
     updateData: TournoiUpdateParams
@@ -138,6 +161,10 @@ export class TournoiService {
     }
   }
 
+  /**
+   * Supprime un tournoi par son ID.
+   * @param tournoiId - L'ID du tournoi à supprimer.
+   */
   public async deleteTournoiById(tournoiId: string): Promise<void> {
     try {
       await prisma.tournoi.delete({
@@ -156,6 +183,58 @@ export class TournoiService {
         }
       }
       throw new Error("Erreur de suppression du tournoi");
+    }
+  }
+
+  /**
+   * Ajoute une équipe à un tournoi.
+   * @param tournoiId - L'ID du tournoi.
+   * @param equipes - Les équipes à ajouter.
+   */
+  public async addEquipesToTournoi(
+    tournoiId: string,
+    equipes: EquipeForm[]
+  ): Promise<void> {
+    try {
+      await prisma.$transaction(async (tx) => {
+        // Créer les équipes et les associer au tournoi
+        const createdEquipes = await tx.equipe.createManyAndReturn({
+          data: equipes.map(({ nom }) => ({
+            nom,
+            tournoiId,
+          })),
+        });
+
+        // Associer les joueurs aux équipes créées
+        for (let i = 0; i < createdEquipes.length; i++) {
+          const equipe = createdEquipes[i];
+          const equipeForm = equipes[i];
+          if (!equipe || !equipeForm) {
+            throw new Error("Erreur lors de la création de l'équipe");
+          }
+          await tx.equipe.update({
+            where: { id: equipe.id },
+            data: {
+              joueurs: {
+                connect: equipeForm.joueursIds.map((id) => ({ id })),
+              },
+            },
+          });
+        }
+      });
+    } catch (error: any) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === "P2025") {
+          throw new Prisma.PrismaClientKnownRequestError(
+            "Ce tournoi ou cette équipe n'existe pas",
+            {
+              code: "P2025",
+              clientVersion: "6.16.2",
+            }
+          );
+        }
+      }
+      throw new Error("Erreur lors de l'ajout de l'équipe au tournoi");
     }
   }
 }
