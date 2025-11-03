@@ -131,10 +131,15 @@ export class TournoiController {
 
       await this.tournoiService.addEquipesToTournoi(tournoiId, equipesValides);
       res
-        .status(200)
+        .status(201)
         .json({ message: "Équipes ajoutées avec succès au tournoi." });
     } catch (error: any) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        res.status(404).json({ error: { message: error.message } });
+        return;
+      }
+
+      if (error instanceof Prisma.PrismaClientUnknownRequestError) {
         res.status(404).json({ error: { message: error.message } });
         return;
       }
@@ -144,9 +149,7 @@ export class TournoiController {
         return;
       }
 
-      res
-        .status(500)
-        .json({ error: { message: error.message }, equipes: req.body.equipes });
+      res.status(500).json({ error: { message: error.message } });
     }
   };
 }

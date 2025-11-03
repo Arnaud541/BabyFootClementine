@@ -195,46 +195,78 @@ export class TournoiService {
     tournoiId: string,
     equipes: EquipeForm[]
   ): Promise<void> {
-    try {
-      await prisma.$transaction(async (tx) => {
-        // Créer les équipes et les associer au tournoi
-        const createdEquipes = await tx.equipe.createManyAndReturn({
-          data: equipes.map(({ nom }) => ({
-            nom,
-            tournoiId,
-          })),
-        });
+    // Vérifier que le tournoi existe
+    const tournoi = await prisma.tournoi.findUnique({
+      where: { id: tournoiId },
+      select: { id: true },
+    });
 
-        // Associer les joueurs aux équipes créées
-        for (let i = 0; i < createdEquipes.length; i++) {
-          const equipe = createdEquipes[i];
-          const equipeForm = equipes[i];
-          if (!equipe || !equipeForm) {
-            throw new Error("Erreur lors de la création de l'équipe");
-          }
-          await tx.equipe.update({
-            where: { id: equipe.id },
-            data: {
-              joueurs: {
-                connect: equipeForm.joueursIds.map((id) => ({ id })),
-              },
-            },
-          });
+    if (!tournoi) {
+      throw new Prisma.PrismaClientKnownRequestError(
+        "Ce tournoi n'existe pas",
+        {
+          code: "P2025",
+          clientVersion: "6.16.2",
         }
-      });
-    } catch (error: any) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        if (error.code === "P2025") {
-          throw new Prisma.PrismaClientKnownRequestError(
-            "Ce tournoi ou cette équipe n'existe pas",
-            {
-              code: "P2025",
-              clientVersion: "6.16.2",
-            }
-          );
+      );
+    }
+
+    // Vérifier que les utilisateurs sont bien inscrits au tournoi
+    const { joueursInscrits } = await prisma.tournoi.findUniqueOrThrow({
+      where: { id: tournoi.id },
+      select: { joueursInscrits: { select: { id: true } } },
+    });
+
+    const joueursInscritsIds = joueursInscrits.map((j) => j.id);
+    for (const equipe of equipes) {
+      for (const joueurId of equipe.joueursIds) {
+        if (!joueursInscritsIds.includes(joueurId)) {
+          throw new Error(`Un des joueurs n'est pas inscrit au tournoi`);
         }
       }
-      throw new Error("Erreur lors de l'ajout de l'équipe au tournoi");
     }
+
+    await prisma.$transaction(async (tx) => {
+      // Vérifier si un utilisateur est déjà dans une équipe du tournoi
+      for (const equipe of equipes) {
+        for (const joueurId of equipe.joueursIds) {
+          const equipeExistante = await tx.equipe.findFirst({
+            where: {
+              tournoiId: tournoi.id,
+              joueurs: { some: { id: joueurId } },
+            },
+          });
+          if (equipeExistante) {
+            throw new Error(
+              `Le joueur avec l'ID ${joueurId} est déjà dans une équipe du tournoi`
+            );
+          }
+        }
+      }
+      // Créer les équipes et les associer au tournoi
+      const createdEquipes = await tx.equipe.createManyAndReturn({
+        data: equipes.map(({ nom }) => ({
+          nom,
+          tournoiId,
+        })),
+      });
+
+      // Associer les joueurs aux équipes créées
+      for (let i = 0; i < createdEquipes.length; i++) {
+        const equipe = createdEquipes[i];
+        const equipeForm = equipes[i];
+        if (!equipe || !equipeForm) {
+          throw new Error("Erreur lors de la création de l'équipe");
+        }
+        await tx.equipe.update({
+          where: { id: equipe.id },
+          data: {
+            joueurs: {
+              connect: equipeForm.joueursIds.map((id) => ({ id })),
+            },
+          },
+        });
+      }
+    });
   }
 }

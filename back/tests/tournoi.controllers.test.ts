@@ -49,6 +49,7 @@ describe("GET /api/tournois/:id", () => {
       nom: "Tournoi 2",
       date: expect.any(String),
       matchs: expect.any(Array),
+      equipes: expect.any(Array),
       joueursInscrits: expect.any(Array),
       description: null,
       estTermine: false,
