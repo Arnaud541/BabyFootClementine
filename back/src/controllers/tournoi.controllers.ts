@@ -6,6 +6,7 @@ import {
   tournoiUpdateSchema,
 } from "../lib/schemas/tournoiSchema";
 import z from "zod";
+import { creationEquipeSchema } from "../lib/schemas/equipeSchema";
 
 export class TournoiController {
   private tournoiService: TournoiService;
@@ -109,6 +110,45 @@ export class TournoiController {
         res.status(400).json({ error: { message: error.issues[0]?.message } });
         return;
       }
+      res.status(500).json({ error: { message: error.message } });
+    }
+  };
+
+  /**
+   * Ajoute une équipe à un tournoi.
+   * @param req - La requête HTTP.
+   * @param res - La réponse HTTP.
+   * @returns - La promesse de la réponse HTTP.
+   */
+  public addEquipesToTournoi = async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
+    try {
+      const { equipes } = req.body;
+      const tournoiId = tournoiIdSchema.parse(req.params.id);
+      const equipesValides = creationEquipeSchema.parse(equipes);
+
+      await this.tournoiService.addEquipesToTournoi(tournoiId, equipesValides);
+      res
+        .status(201)
+        .json({ message: "Équipes ajoutées avec succès au tournoi." });
+    } catch (error: any) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        res.status(404).json({ error: { message: error.message } });
+        return;
+      }
+
+      if (error instanceof Prisma.PrismaClientUnknownRequestError) {
+        res.status(404).json({ error: { message: error.message } });
+        return;
+      }
+
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: { message: error.issues[0]?.message } });
+        return;
+      }
+
       res.status(500).json({ error: { message: error.message } });
     }
   };

@@ -1,4 +1,5 @@
 import {
+  EquipeForm,
   TournoiDetails,
   TournoiSummary,
   TournoiUpdateParams,
@@ -7,6 +8,10 @@ import { prisma } from "../prisma/client";
 import { Prisma } from "@prisma/client";
 
 export class TournoiService {
+  /**
+   * Récupère la liste de tous les tournois.
+   * @returns - La liste des tournois.
+   */
   public async getAllTournois(): Promise<TournoiSummary[]> {
     try {
       const tournois = await prisma.tournoi.findMany({
@@ -36,6 +41,11 @@ export class TournoiService {
     }
   }
 
+  /**
+   * Récupère un tournoi par son ID.
+   * @param tournoiId - L'ID du tournoi à récupérer.
+   * @returns - Les détails du tournoi.
+   */
   public async getTournoiById(tournoiId: string): Promise<TournoiDetails> {
     try {
       const tournoi = await prisma.tournoi.findUniqueOrThrow({
@@ -47,6 +57,13 @@ export class TournoiService {
           description: true,
           estTermine: true,
           joueursInscrits: { select: { id: true, prenom: true, nom: true } },
+          equipes: {
+            select: {
+              id: true,
+              nom: true,
+              joueurs: { select: { id: true, prenom: true, nom: true } },
+            },
+          },
           matchs: {
             select: {
               id: true,
@@ -86,6 +103,12 @@ export class TournoiService {
     }
   }
 
+  /**
+   * Met à jour un tournoi par son ID.
+   * @param tournoiId - L'ID du tournoi à mettre à jour.
+   * @param updateData - Les données de mise à jour du tournoi.
+   * @returns - Le tournoi mis à jour.
+   */
   public async updateTournoiById(
     tournoiId: string,
     updateData: TournoiUpdateParams
@@ -138,6 +161,10 @@ export class TournoiService {
     }
   }
 
+  /**
+   * Supprime un tournoi par son ID.
+   * @param tournoiId - L'ID du tournoi à supprimer.
+   */
   public async deleteTournoiById(tournoiId: string): Promise<void> {
     try {
       await prisma.tournoi.delete({
@@ -157,5 +184,89 @@ export class TournoiService {
       }
       throw new Error("Erreur de suppression du tournoi");
     }
+  }
+
+  /**
+   * Ajoute une équipe à un tournoi.
+   * @param tournoiId - L'ID du tournoi.
+   * @param equipes - Les équipes à ajouter.
+   */
+  public async addEquipesToTournoi(
+    tournoiId: string,
+    equipes: EquipeForm[]
+  ): Promise<void> {
+    // Vérifier que le tournoi existe
+    const tournoi = await prisma.tournoi.findUnique({
+      where: { id: tournoiId },
+      select: { id: true },
+    });
+
+    if (!tournoi) {
+      throw new Prisma.PrismaClientKnownRequestError(
+        "Ce tournoi n'existe pas",
+        {
+          code: "P2025",
+          clientVersion: "6.16.2",
+        }
+      );
+    }
+
+    // Vérifier que les utilisateurs sont bien inscrits au tournoi
+    const { joueursInscrits } = await prisma.tournoi.findUniqueOrThrow({
+      where: { id: tournoi.id },
+      select: { joueursInscrits: { select: { id: true } } },
+    });
+
+    const joueursInscritsIds = joueursInscrits.map((j) => j.id);
+    for (const equipe of equipes) {
+      for (const joueurId of equipe.joueursIds) {
+        if (!joueursInscritsIds.includes(joueurId)) {
+          throw new Error(`Un des joueurs n'est pas inscrit au tournoi`);
+        }
+      }
+    }
+
+    await prisma.$transaction(async (tx) => {
+      // Vérifier si un utilisateur est déjà dans une équipe du tournoi
+      for (const equipe of equipes) {
+        for (const joueurId of equipe.joueursIds) {
+          const equipeExistante = await tx.equipe.findFirst({
+            where: {
+              tournoiId: tournoi.id,
+              joueurs: { some: { id: joueurId } },
+            },
+          });
+          if (equipeExistante) {
+            throw new Error(
+              `Le joueur avec l'ID ${joueurId} est déjà dans une équipe du tournoi`
+            );
+          }
+        }
+      }
+      // Créer les équipes et les associer au tournoi
+      const createdEquipes = await tx.equipe.createManyAndReturn({
+        data: equipes.map(({ nom }) => ({
+          nom,
+          tournoiId,
+        })),
+      });
+
+      // Associer les joueurs aux équipes créées
+      for (let i = 0; i < createdEquipes.length; i++) {
+        const equipe = createdEquipes[i];
+        const equipeForm = equipes[i];
+        if (!equipe || !equipeForm) {
+          throw new Error("Erreur lors de la création de l'équipe");
+        }
+        await tx.equipe.update({
+          where: { id: equipe.id },
+          data: {
+            joueurs: {
+              connect: equipeForm.joueursIds.map((id) => ({ id })),
+            },
+          },
+        });
+      }
+    });
   }
 }

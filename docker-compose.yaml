@@ -33,49 +33,41 @@ services:
       - NODE_ENV=development
 
   database:
-    image: mysql:latest
-    container_name: ${PROJECT_NAME}-mysql
+    image: postgres:latest
+    container_name: ${PROJECT_NAME}-postgres
     volumes:
-      - db_data:/var/lib/mysql
+      - db_data:/var/lib/postgresql
     ports:
-      - "3306:3306"
+      - "5432:5432"
     environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-      - MYSQL_ROOT_USER=${MYSQL_ROOT_USER}
-      - MYSQL_DATABASE=${PROJECT_NAME}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${PROJECT_NAME}
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "mysqladmin ping -h 127.0.0.1 -p$$MYSQL_ROOT_PASSWORD --silent",
-        ]
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 5s
       timeout: 3s
       retries: 30
 
   database-test:
-    image: mysql:latest
-    container_name: ${PROJECT_NAME}-mysql-test
+    image: postgres:latest
+    container_name: ${PROJECT_NAME}-postgres-test
     volumes:
-      - db_data_test:/var/lib/mysql
+      - db_data_test:/var/lib/postgresql
     ports:
-      - "3307:3306"
+      - "3307:5432"
     environment:
-      - MYSQL_ROOT_PASSWORD=root
-      - MYSQL_ROOT_USER=root
-      - MYSQL_DATABASE=BabyFootClementine-test
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=BabyFootClementine-test
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "mysqladmin ping -h 127.0.0.1 -p$$MYSQL_ROOT_PASSWORD --silent",
-        ]
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 5s
       timeout: 3s
       retries: 30
 
 volumes:
   db_data:
-    name: ${PROJECT_NAME}-mysql-data
+    name: ${PROJECT_NAME}-postgres-data
   db_data_test:
-    name: ${PROJECT_NAME}-mysql-test-data
+    name: ${PROJECT_NAME}-postgres-test-data

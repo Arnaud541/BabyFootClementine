@@ -12,12 +12,18 @@ export type TournoiSummary = {
   nbJoueursInscrits: number;
 };
 
+export type EquipeForm = {
+  nom: string;
+  joueursIds: string[];
+};
+
 export type TournoiDetails = {
   id: string;
   nom: string;
   date: Date;
   description: string | null;
   estTermine: boolean;
+  equipes: EquipeSummary[];
   matchs: MatchSummary[];
   joueursInscrits: JoueurSummary[];
 };
