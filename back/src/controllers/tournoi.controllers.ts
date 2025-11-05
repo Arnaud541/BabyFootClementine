@@ -1,11 +1,9 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { TournoiService } from "../services/tournoi.services";
-import { Prisma } from "@prisma/client";
 import {
   tournoiIdSchema,
   tournoiUpdateSchema,
 } from "../lib/schemas/tournoiSchema";
-import z from "zod";
 import { creationEquipeSchema } from "../lib/schemas/equipeSchema";
 
 export class TournoiController {
@@ -20,15 +18,17 @@ export class TournoiController {
    * @param req - La requête HTTP.
    * @param res - La réponse HTTP.
    */
-  public getAllTournois = async (
+  public getTournois = async (
     req: Request,
-    res: Response
+    res: Response,
+    next: NextFunction
   ): Promise<void> => {
     try {
-      const tournois = await this.tournoiService.getAllTournois();
-      res.status(200).json(tournois);
+      const tournois = await this.tournoiService.findAll();
+      res.status(200).json({ success: true, data: tournois });
     } catch (error: any) {
-      res.status(500).json({ error: { message: error.message } });
+      // throw error;
+      next(error);
     }
   };
 
@@ -39,22 +39,15 @@ export class TournoiController {
    */
   public getTournoiById = async (
     req: Request,
-    res: Response
+    res: Response,
+    next: NextFunction
   ): Promise<void> => {
     try {
       const tournoiId = tournoiIdSchema.parse(req.params.id);
-      const tournoi = await this.tournoiService.getTournoiById(tournoiId);
-      res.status(200).json(tournoi);
+      const tournoi = await this.tournoiService.findById(tournoiId);
+      res.status(200).json({ success: true, data: tournoi });
     } catch (error: any) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        res.status(404).json({ error: { message: error.message } });
-        return;
-      }
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ error: { message: error.issues[0]?.message } });
-        return;
-      }
-      res.status(500).json({ error: { message: error.message } });
+      next(error);
     }
   };
 
@@ -65,26 +58,19 @@ export class TournoiController {
    */
   public updateTournoiById = async (
     req: Request,
-    res: Response
+    res: Response,
+    next: NextFunction
   ): Promise<void> => {
     try {
       const tournoiId = tournoiIdSchema.parse(req.params.id);
       const tournoiBody = tournoiUpdateSchema.parse(req.body);
-      const updateTournoi = await this.tournoiService.updateTournoiById(
+      const updateTournoi = await this.tournoiService.update(
         tournoiId,
         tournoiBody
       );
-      res.status(200).json(updateTournoi);
+      res.status(200).json({ success: true, data: updateTournoi });
     } catch (error: any) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        res.status(404).json({ error: { message: error.message } });
-        return;
-      }
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ error: { message: error.issues[0]?.message } });
-        return;
-      }
-      res.status(500).json({ error: { message: error.message } });
+      next(error);
     }
   };
 
@@ -95,22 +81,15 @@ export class TournoiController {
    */
   public deleteTournoiById = async (
     req: Request,
-    res: Response
+    res: Response,
+    next: NextFunction
   ): Promise<void> => {
     try {
       const tournoiId = tournoiIdSchema.parse(req.params.id);
-      await this.tournoiService.deleteTournoiById(tournoiId);
+      await this.tournoiService.delete(tournoiId);
       res.status(204).end();
     } catch (error: any) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        res.status(404).json({ error: { message: error.message } });
-        return;
-      }
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ error: { message: error.issues[0]?.message } });
-        return;
-      }
-      res.status(500).json({ error: { message: error.message } });
+      next(error);
     }
   };
 
@@ -120,36 +99,22 @@ export class TournoiController {
    * @param res - La réponse HTTP.
    * @returns - La promesse de la réponse HTTP.
    */
-  public addEquipesToTournoi = async (
+  public createEquipesTournoi = async (
     req: Request,
-    res: Response
+    res: Response,
+    next: NextFunction
   ): Promise<void> => {
     try {
       const { equipes } = req.body;
       const tournoiId = tournoiIdSchema.parse(req.params.id);
       const equipesValides = creationEquipeSchema.parse(equipes);
 
-      await this.tournoiService.addEquipesToTournoi(tournoiId, equipesValides);
-      res
-        .status(201)
-        .json({ message: "Équipes ajoutées avec succès au tournoi." });
+      await this.tournoiService.createEquipesTournoi(tournoiId, equipesValides);
+      res.status(201).json({
+        success: true,
+      });
     } catch (error: any) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        res.status(404).json({ error: { message: error.message } });
-        return;
-      }
-
-      if (error instanceof Prisma.PrismaClientUnknownRequestError) {
-        res.status(404).json({ error: { message: error.message } });
-        return;
-      }
-
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ error: { message: error.issues[0]?.message } });
-        return;
-      }
-
-      res.status(500).json({ error: { message: error.message } });
+      next(error);
     }
   };
 }

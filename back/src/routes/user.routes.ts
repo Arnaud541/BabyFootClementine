@@ -6,10 +6,9 @@ import UserController from "../controllers/user.controllers";
 const userRouter = Router();
 const userController = new UserController();
 
-userRouter.get("/:id/tournois", userController.getTournoisByUserId);
 userRouter.patch(
   "/:userId/inscription/tournois/:tournoiId",
-  userController.subscribeUserToTournoi
+  userController.subscribeUtilisateurToTournoi
 );
 
 export default userRouter;
