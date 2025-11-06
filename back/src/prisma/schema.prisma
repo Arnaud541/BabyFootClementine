@@ -30,7 +30,7 @@ model Equipe {
   updatedAt DateTime      @updatedAt @map("updated_at")
   matchsA   Match[]       @relation("equipeA") // Matchs où l'équipe est equipeA
   matchsB   Match[]       @relation("equipeB") // Matchs où l'équipe est equipeB
-  tournoi   Tournoi       @relation(fields: [tournoiId], references: [id])
+  tournoi   Tournoi       @relation(fields: [tournoiId], references: [id], onDelete: Cascade) // Tournoi auquel l'équipe appartient
   tournoiId String
 }
 
@@ -55,7 +55,7 @@ model Match {
   equipeBId  String
   scoreA     Int      @default(0)
   scoreB     Int      @default(0)
-  tournoi    Tournoi  @relation(fields: [tournoiId], references: [id]) // Tournoi auquel le match appartient
+  tournoi    Tournoi  @relation(fields: [tournoiId], references: [id], onDelete: Cascade) // Tournoi auquel le match appartient
   tournoiId  String
   estTermine Boolean  @default(false) @map("est_termine")
   createdAt  DateTime @default(now()) @map("created_at")

@@ -1,8 +1,7 @@
 // tests/tournoi.test.ts
 import request from "supertest";
-import { app } from "../src/app";
-import { prisma } from "../src/prisma/client";
-import { uuid, uuidv4 } from "zod";
+import { app } from "../../src/app";
+import { prisma } from "../../src/prisma/client";
 
 describe("POST /api/tournois/:id/equipes", () => {
   let tournoiId: string;
@@ -139,6 +138,33 @@ describe("POST /api/tournois/:id/equipes", () => {
   });
 
   describe("Cas d'erreur", () => {
+    it("devrait échouer avec des données invalides", async () => {
+      const equipeData = {
+        equipes: [
+          {
+            // nom manquant
+            joueursIds: [userId1],
+          },
+        ],
+      };
+
+      await request(app)
+        .post(`/api/tournois/${tournoiId}/equipes`)
+        .send(equipeData)
+        .expect(400);
+    });
+
+    it("devrait échouer si aucune équipe n'est fournie", async () => {
+      const equipeData = {
+        equipes: [],
+      };
+
+      await request(app)
+        .post(`/api/tournois/${tournoiId}/equipes`)
+        .send(equipeData)
+        .expect(400);
+    });
+
     it("devrait échouer si le tournoi n'existe pas", async () => {
       const equipeData = {
         equipes: [
@@ -156,7 +182,10 @@ describe("POST /api/tournois/:id/equipes", () => {
         .send(equipeData)
         .expect(404);
 
-      expect(response.body.error.message).toEqual("Ce tournoi n'existe pas");
+      expect(response.body.success).toBe(false);
+      expect(response.body.error.message).toEqual(
+        "Cette ressource n'existe pas"
+      );
     });
 
     it("devrait échouer si un joueur n'est pas inscrit au tournoi", async () => {
@@ -184,36 +213,10 @@ describe("POST /api/tournois/:id/equipes", () => {
         .send(equipeData)
         .expect(500);
 
+      expect(response.body.success).toBe(false);
       expect(response.body.error.message).toEqual(
-        "Un des joueurs n'est pas inscrit au tournoi"
+        `Le joueur avec l'identifiant : ${userNonInscrit.id} n'est pas inscrit au tournoi`
       );
-    });
-
-    it("devrait échouer avec des données invalides", async () => {
-      const equipeData = {
-        equipes: [
-          {
-            // nom manquant
-            joueursIds: [userId1],
-          },
-        ],
-      };
-
-      await request(app)
-        .post(`/api/tournois/${tournoiId}/equipes`)
-        .send(equipeData)
-        .expect(400);
-    });
-
-    it("devrait échouer si aucune équipe n'est fournie", async () => {
-      const equipeData = {
-        equipes: [],
-      };
-
-      await request(app)
-        .post(`/api/tournois/${tournoiId}/equipes`)
-        .send(equipeData)
-        .expect(400);
     });
   });
 
@@ -245,7 +248,9 @@ describe("POST /api/tournois/:id/equipes", () => {
         })
         .expect(500);
 
-      expect(response.body.error.message).toContain("déjà dans une équipe");
+      expect(response.body.error.message).toEqual(
+        `Le joueur avec l'identifiant : ${userId1} est déjà dans une équipe du tournoi`
+      );
     });
   });
 });
