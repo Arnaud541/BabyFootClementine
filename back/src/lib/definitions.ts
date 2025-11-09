@@ -17,6 +17,16 @@ export type EquipeForm = {
   joueursIds: string[];
 };
 
+export type UpdateEquipeBody = {
+  nom?: string | undefined;
+  joueursIds?:
+    | {
+        currentUserId: string;
+        newUserId: string;
+      }[]
+    | undefined;
+};
+
 export type TournoiDetails = {
   id: string;
   nom: string;

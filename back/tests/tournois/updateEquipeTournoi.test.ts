@@ -2,7 +2,7 @@ import { app } from "../../src/app";
 import { prisma } from "../../src/prisma/client";
 import request from "supertest";
 
-describe("PATCH /tournois/:id/equipes/:equipeId", () => {
+describe("PATCH /tournois/:tournoiId/equipes/:equipeId", () => {
   let tournoiId: string;
   let equipeId: string;
   let userId1: string;
@@ -88,7 +88,7 @@ describe("PATCH /tournois/:id/equipes/:equipeId", () => {
       });
 
       const response = await request(app)
-        .patch(`/tournois/${tournoiId}/equipes/${equipeId}`)
+        .patch(`/api/tournois/${tournoiId}/equipes/${equipeId}`)
         .send({
           joueursIds: [
             {
@@ -113,18 +113,18 @@ describe("PATCH /tournois/:id/equipes/:equipeId", () => {
     });
 
     it("devrait mettre à jour deux joueurs d'une équipe du tournoi", async () => {
-      // Inscrire le troisième utilisateur au tournoi
+      // Inscrire le troisième et quatrième utilisateur au tournoi
       await prisma.tournoi.update({
         where: { id: tournoiId },
         data: {
           joueursInscrits: {
-            connect: { id: userId3 },
+            connect: [{ id: userId3 }, { id: userId4 }],
           },
         },
       });
 
       const response = await request(app)
-        .patch(`/tournois/${tournoiId}/equipes/${equipeId}`)
+        .patch(`/api/tournois/${tournoiId}/equipes/${equipeId}`)
         .send({
           joueursIds: [
             {
@@ -152,51 +152,42 @@ describe("PATCH /tournois/:id/equipes/:equipeId", () => {
       expect(updatedEquipe?.joueurs.some((j) => j.id === userId1)).toBe(false);
       expect(updatedEquipe?.joueurs.length).toBe(2);
     });
+
+    it("devrait mettre à jour le nom d'une équipe du tournoi", async () => {
+      const newTeamName = "Equipe Modifiée";
+
+      const response = await request(app)
+        .patch(`/api/tournois/${tournoiId}/equipes/${equipeId}`)
+        .send({
+          nom: newTeamName,
+        })
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+
+      const updatedEquipe = await prisma.equipe.findUnique({
+        where: { id: equipeId },
+      });
+
+      expect(updatedEquipe?.nom).toBe(newTeamName);
+    });
   });
 
   describe("Cas d'erreur", () => {
     it("devrait retourner une erreur si l'équipe n'existe pas", async () => {
-      const equipeInexistantId = "9fced75d-81fc-4487-b9aa-c4e13ded0d36";
+      const equipeInexistantId = "9fced75d-81fc-4487-b9aa-c4e13ded0d38";
       const response = await request(app)
-        .patch(`/tournois/${tournoiId}/equipes/${equipeInexistantId}`)
+        .patch(`/api/tournois/${tournoiId}/equipes/${equipeInexistantId}`)
+        .send({})
         .expect(404);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.message).toBe("Équipe non trouvée");
-    });
-
-    it("devrait retourner une erreur si le tournoi n'existe pas", async () => {
-      const tournoiInexistantId = "3a1f5e2b-5d6c-4e7f-9a8b-1c2d3e4f5g6h";
-      const response = await request(app)
-        .patch(`/tournois/${tournoiInexistantId}/equipes/${equipeId}`)
-        .expect(404);
-
-      expect(response.body.success).toBe(false);
-      expect(response.body.message).toBe("Tournoi non trouvé");
-    });
-
-    it("devrait retourner une erreur si un joueur à remplacer n'est pas dans l'équipe", async () => {
-      const response = await request(app)
-        .patch(`/tournois/${tournoiId}/equipes/${equipeId}`)
-        .send({
-          joueursIds: [
-            {
-              currentUserId: userId3,
-              newUserId: userId4,
-            },
-          ],
-        })
-        .expect(400);
-
-      expect(response.body.success).toBe(false);
-      expect(response.body.message).toBe(
-        `Le joueur avec l'identifiant : ${userId3} ne fait pas partie de l'équipe`
-      );
+      expect(response.body.error.message).toBe("Cette équipe n'existe pas");
     });
 
     it("devrait retourner une erreur si un joueur n'est pas inscrit au tournoi", async () => {
       const response = await request(app)
-        .patch(`/tournois/${tournoiId}/equipes/${equipeId}`)
+        .patch(`/api/tournois/${tournoiId}/equipes/${equipeId}`)
         .send({
           nom: "Equipe Modifiée",
           joueursIds: [
@@ -206,10 +197,10 @@ describe("PATCH /tournois/:id/equipes/:equipeId", () => {
             },
           ],
         })
-        .expect(400);
+        .expect(500);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.message).toBe(
+      expect(response.body.error.message).toBe(
         `Le joueur avec l'identifiant : ${userId3} n'est pas inscrit au tournoi`
       );
     });

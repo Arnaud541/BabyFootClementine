@@ -31,7 +31,6 @@ export class TournoiController {
       const tournois = await this.tournoiService.findAll();
       res.status(200).json({ success: true, data: tournois });
     } catch (error: any) {
-      // throw error;
       next(error);
     }
   };
@@ -59,6 +58,7 @@ export class TournoiController {
    * Modifier les détails d'un tournoi par son ID.
    * @param req - La requête HTTP.
    * @param res - La réponse HTTP.
+   * @param next - La fonction middleware suivante.
    */
   public updateTournoiById = async (
     req: Request,
@@ -82,6 +82,7 @@ export class TournoiController {
    * Supprime un tournoi par son ID.
    * @param req - La requête HTTP.
    * @param res - La réponse HTTP.
+   * @param next - La fonction middleware suivante.
    */
   public deleteTournoiById = async (
     req: Request,
@@ -101,7 +102,7 @@ export class TournoiController {
    * Ajoute une équipe à un tournoi.
    * @param req - La requête HTTP.
    * @param res - La réponse HTTP.
-   * @returns - La promesse de la réponse HTTP.
+   * @param next - La fonction middleware suivante.
    */
   public createEquipesTournoi = async (
     req: Request,
@@ -141,8 +142,7 @@ export class TournoiController {
       await this.tournoiService.updateEquipeTournoi(
         tournoiId,
         equipeId,
-        updateEquipeBodyValide.joueursIds,
-        updateEquipeBodyValide.nom
+        updateEquipeBodyValide
       );
 
       res.status(200).json({ success: true });
