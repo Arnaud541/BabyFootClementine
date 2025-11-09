@@ -1,5 +1,10 @@
 import z from "zod";
 
+export const equipeIdSchema = z.uuid({
+  version: "v4",
+  error: "Identifiant de l'équipe invalide",
+});
+
 export const creationEquipeSchema = z
   .array(
     z.object({
@@ -19,3 +24,26 @@ export const creationEquipeSchema = z
     })
   )
   .min(1, "Au moins une équipe doit être fournie");
+
+export const updateEquipeSchema = z.object({
+  nom: z
+    .string("Le nom de l'équipe doit être une chaîne de caractères")
+    .min(3, "Le nom de l'équipe doit contenir au moins 3 caractères")
+    .max(100, "Le nom de l'équipe doit contenir au maximum 100 caractères")
+    .optional(),
+  joueursIds: z
+    .array(
+      z.object({
+        currentUserId: z.uuid({
+          version: "v4",
+          error: "L'identifiant actuel du joueur est invalide",
+        }),
+        newUserId: z.uuid({
+          version: "v4",
+          error: "Le nouvel identifiant du joueur est invalide",
+        }),
+      }),
+      "La liste des modifications des joueurs doit être un tableau"
+    )
+    .optional(),
+});

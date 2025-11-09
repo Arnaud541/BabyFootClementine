@@ -4,7 +4,11 @@ import {
   tournoiIdSchema,
   tournoiUpdateSchema,
 } from "../lib/schemas/tournoiSchema";
-import { creationEquipeSchema } from "../lib/schemas/equipeSchema";
+import {
+  creationEquipeSchema,
+  equipeIdSchema,
+  updateEquipeSchema,
+} from "../lib/schemas/equipeSchema";
 
 export class TournoiController {
   private tournoiService: TournoiService;
@@ -113,6 +117,35 @@ export class TournoiController {
       res.status(201).json({
         success: true,
       });
+    } catch (error: any) {
+      next(error);
+    }
+  };
+
+  /**
+   * Met à jour une équipe d'un tournoi.
+   * @param req - La requête HTTP.
+   * @param res - La réponse HTTP.
+   * @param next - La fonction middleware suivante.
+   */
+  public updateEquipeTournoi = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const tournoiId = tournoiIdSchema.parse(req.params.tournoiId);
+      const equipeId = equipeIdSchema.parse(req.params.equipeId);
+      const updateEquipeBodyValide = updateEquipeSchema.parse(req.body);
+
+      await this.tournoiService.updateEquipeTournoi(
+        tournoiId,
+        equipeId,
+        updateEquipeBodyValide.joueursIds,
+        updateEquipeBodyValide.nom
+      );
+
+      res.status(200).json({ success: true });
     } catch (error: any) {
       next(error);
     }

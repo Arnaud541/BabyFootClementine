@@ -11,9 +11,9 @@ tournoiRouter.get("/:id", tournoiController.getTournoiById);
 tournoiRouter.patch("/:id", tournoiController.updateTournoiById);
 tournoiRouter.delete("/:id", tournoiController.deleteTournoiById);
 tournoiRouter.post("/:id/equipes", tournoiController.createEquipesTournoi);
-// tournoiRouter.patch(
-//   "/:id/equipes/:equipeId",
-//   tournoiController.updateEquipeTournoi
-// );
+tournoiRouter.patch(
+  "/:tournoiId/equipes/:equipeId",
+  tournoiController.updateEquipeTournoi
+);
 
 export default tournoiRouter;
