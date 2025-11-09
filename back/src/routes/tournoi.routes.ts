@@ -15,5 +15,9 @@ tournoiRouter.patch(
   "/:tournoiId/equipes/:equipeId",
   tournoiController.updateEquipeTournoi
 );
+tournoiRouter.delete(
+  "/:tournoiId/equipes/:equipeId",
+  tournoiController.deleteEquipeTournoi
+);
 
 export default tournoiRouter;
