@@ -14,6 +14,8 @@ const config: Config = {
 
   rootDir: ".",
 
+  verbose: true,
+
   transform: {
     "^.+\\.tsx?$": ["ts-jest", { tsconfig: "tsconfig.test.json" }],
   },

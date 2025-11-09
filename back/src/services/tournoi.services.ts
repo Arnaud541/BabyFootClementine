@@ -3,6 +3,7 @@ import {
   TournoiDetails,
   TournoiSummary,
   TournoiUpdateParams,
+  UpdateEquipeBody,
 } from "../lib/definitions";
 import { prisma } from "../prisma/client";
 import { Prisma } from "@prisma/client";
@@ -226,5 +227,68 @@ export class TournoiService {
         });
       }
     });
+  }
+
+  public async updateEquipeTournoi(
+    tournoiId: string,
+    equipeId: string,
+    updateEquipeBody: UpdateEquipeBody
+  ): Promise<void> {
+    const { nom, joueursIds } = updateEquipeBody;
+
+    // Vérifier que l'équipe existe
+    const equipe = await prisma.equipe.findFirst({
+      where: { id: equipeId },
+    });
+
+    if (!equipe) {
+      throw new NotFoundError("Cette équipe n'existe pas");
+    }
+
+    // Mettre à jour le nom de l'équipe si fourni
+    if (nom) {
+      await prisma.equipe.update({
+        where: { id: equipeId },
+        data: { nom },
+      });
+    }
+
+    // Mettre à jour les joueurs de l'équipe si des modifications sont fournies
+    if (joueursIds && joueursIds.length > 0) {
+      // Récupérer les joueurs inscrits au tournoi
+      const tournoi = await prisma.tournoi.findUnique({
+        where: { id: tournoiId },
+        include: { joueursInscrits: true },
+      });
+
+      for (const { currentUserId, newUserId } of joueursIds) {
+        // Vérifier que le nouvel utilisateur est inscrit au tournoi
+        if (!tournoi?.joueursInscrits.some((j) => j.id === newUserId)) {
+          throw new Error(
+            `Le joueur avec l'identifiant : ${newUserId} n'est pas inscrit au tournoi`
+          );
+        }
+
+        // Retirer le joueur actuel de l'équipe
+        await prisma.equipe.update({
+          where: { id: equipeId },
+          data: {
+            joueurs: {
+              disconnect: { id: currentUserId },
+            },
+          },
+        });
+
+        // Ajouter le nouvel identifiant du joueur à l'équipe
+        await prisma.equipe.update({
+          where: { id: equipeId },
+          data: {
+            joueurs: {
+              connect: { id: newUserId },
+            },
+          },
+        });
+      }
+    }
   }
 }

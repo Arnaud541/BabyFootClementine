@@ -4,7 +4,11 @@ import {
   tournoiIdSchema,
   tournoiUpdateSchema,
 } from "../lib/schemas/tournoiSchema";
-import { creationEquipeSchema } from "../lib/schemas/equipeSchema";
+import {
+  creationEquipeSchema,
+  equipeIdSchema,
+  updateEquipeSchema,
+} from "../lib/schemas/equipeSchema";
 
 export class TournoiController {
   private tournoiService: TournoiService;
@@ -27,7 +31,6 @@ export class TournoiController {
       const tournois = await this.tournoiService.findAll();
       res.status(200).json({ success: true, data: tournois });
     } catch (error: any) {
-      // throw error;
       next(error);
     }
   };
@@ -55,6 +58,7 @@ export class TournoiController {
    * Modifier les détails d'un tournoi par son ID.
    * @param req - La requête HTTP.
    * @param res - La réponse HTTP.
+   * @param next - La fonction middleware suivante.
    */
   public updateTournoiById = async (
     req: Request,
@@ -78,6 +82,7 @@ export class TournoiController {
    * Supprime un tournoi par son ID.
    * @param req - La requête HTTP.
    * @param res - La réponse HTTP.
+   * @param next - La fonction middleware suivante.
    */
   public deleteTournoiById = async (
     req: Request,
@@ -97,7 +102,7 @@ export class TournoiController {
    * Ajoute une équipe à un tournoi.
    * @param req - La requête HTTP.
    * @param res - La réponse HTTP.
-   * @returns - La promesse de la réponse HTTP.
+   * @param next - La fonction middleware suivante.
    */
   public createEquipesTournoi = async (
     req: Request,
@@ -113,6 +118,34 @@ export class TournoiController {
       res.status(201).json({
         success: true,
       });
+    } catch (error: any) {
+      next(error);
+    }
+  };
+
+  /**
+   * Met à jour une équipe d'un tournoi.
+   * @param req - La requête HTTP.
+   * @param res - La réponse HTTP.
+   * @param next - La fonction middleware suivante.
+   */
+  public updateEquipeTournoi = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const tournoiId = tournoiIdSchema.parse(req.params.tournoiId);
+      const equipeId = equipeIdSchema.parse(req.params.equipeId);
+      const updateEquipeBodyValide = updateEquipeSchema.parse(req.body);
+
+      await this.tournoiService.updateEquipeTournoi(
+        tournoiId,
+        equipeId,
+        updateEquipeBodyValide
+      );
+
+      res.status(200).json({ success: true });
     } catch (error: any) {
       next(error);
     }
