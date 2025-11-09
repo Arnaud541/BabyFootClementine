@@ -291,4 +291,23 @@ export class TournoiService {
       }
     }
   }
+
+  public async deleteEquipeTournoi(
+    tournoiId: string,
+    equipeId: string
+  ): Promise<void> {
+    // Vérifier que l'équipe existe
+    const equipe = await prisma.equipe.findFirst({
+      where: { id: equipeId },
+    });
+
+    if (!equipe) {
+      throw new NotFoundError("Cette équipe n'existe pas");
+    }
+
+    // Supprimer l'équipe
+    await prisma.equipe.delete({
+      where: { id: equipeId },
+    });
+  }
 }

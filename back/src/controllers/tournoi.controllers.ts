@@ -150,4 +150,27 @@ export class TournoiController {
       next(error);
     }
   };
+
+  /**
+   * Supprime une équipe d'un tournoi.
+   * @param req - La requête HTTP.
+   * @param res - La réponse HTTP.
+   * @param next - La fonction middleware suivante.
+   */
+  public deleteEquipeTournoi = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const tournoiId = tournoiIdSchema.parse(req.params.tournoiId);
+      const equipeId = equipeIdSchema.parse(req.params.equipeId);
+
+      await this.tournoiService.deleteEquipeTournoi(tournoiId, equipeId);
+
+      res.status(204).end();
+    } catch (error: any) {
+      next(error);
+    }
+  };
 }
