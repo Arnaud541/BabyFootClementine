@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { TournoiService } from "../services/tournoi.services";
 import {
+  creationTournoiSchema,
   tournoiIdSchema,
   tournoiUpdateSchema,
 } from "../lib/schemas/tournoiSchema";
@@ -49,6 +50,26 @@ export class TournoiController {
       const tournoiId = tournoiIdSchema.parse(req.params.id);
       const tournoi = await this.tournoiService.findById(tournoiId);
       res.status(200).json({ success: true, data: tournoi });
+    } catch (error: any) {
+      next(error);
+    }
+  };
+
+  /**
+   * Créer un nouveau tournoi.
+   * @param req - La requête HTTP.
+   * @param res - La réponse HTTP.
+   * @param next - La fonction middleware suivante.
+   */
+  public createTournoi = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const tournoiBody = creationTournoiSchema.parse(req.body);
+      const newTournoi = await this.tournoiService.create(tournoiBody);
+      res.status(201).json({ success: true, data: newTournoi });
     } catch (error: any) {
       next(error);
     }
